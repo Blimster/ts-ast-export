@@ -1,7 +1,7 @@
 {
   "name": "ts-ast-export",
   "version": "1.0.0",
-  "description": "Exports the AST of a TypeScript program to JSON.",
+  "description": "Exports the AST of all TypeScript declaration files of a NPM package to JSON.",
   "main": "index.js",
   "bin": {
     "ts-ast-export": "bin/cli.js"
