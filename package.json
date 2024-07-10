@@ -1,6 +1,6 @@
 {
   "name": "ts-ast-export",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Exports the AST of all TypeScript declaration files of a NPM package to JSON.",
   "main": "index.js",
   "bin": {
@@ -24,6 +24,7 @@
   "dependencies": {
     "typescript": "^5.5.3",
     "ts-morph": "^23.0.0",
-    "live-plugin-manager": "^1.0.0"
+    "live-plugin-manager": "^1.0.0",
+    "command-line-args": "^6.0.0"
   }
 }
