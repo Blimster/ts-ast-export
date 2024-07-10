@@ -25,7 +25,9 @@ const isHeritageClause = (node) => node.getKind() == typescript_1.SyntaxKind.Her
 const isIdentifier = (node) => node.getKind() == typescript_1.SyntaxKind.Identifier;
 const isImportAttribute = (node) => node.getKind() == typescript_1.SyntaxKind.ImportAttribute;
 const isImportAttributes = (node) => node.getKind() == typescript_1.SyntaxKind.ImportAttributes;
+const isImportClause = (node) => node.getKind() == typescript_1.SyntaxKind.ImportClause;
 const isImportDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.ImportDeclaration;
+const isImportSpecifier = (node) => node.getKind() == typescript_1.SyntaxKind.ImportSpecifier;
 const isImportType = (node) => node.getKind() == typescript_1.SyntaxKind.ImportType;
 const isIndexedAccessType = (node) => node.getKind() == typescript_1.SyntaxKind.IndexedAccessType;
 const isIndexSignature = (node) => node.getKind() == typescript_1.SyntaxKind.IndexSignature;
@@ -39,6 +41,9 @@ const isMethodSignature = (node) => node.getKind() == typescript_1.SyntaxKind.Me
 const isModifier = (node) => [typescript_1.SyntaxKind.AbstractKeyword, typescript_1.SyntaxKind.DeclareKeyword, typescript_1.SyntaxKind.ExportKeyword, typescript_1.SyntaxKind.PrivateKeyword, typescript_1.SyntaxKind.ProtectedKeyword, typescript_1.SyntaxKind.ReadonlyKeyword, typescript_1.SyntaxKind.StaticKeyword].includes(node.getKind());
 const isModuleBlock = (node) => node.getKind() == typescript_1.SyntaxKind.ModuleBlock;
 const isModuleDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.ModuleDeclaration;
+const isNamedImports = (node) => node.getKind() == typescript_1.SyntaxKind.NamedImports;
+const isNamespaceExport = (node) => node.getKind() == typescript_1.SyntaxKind.NamespaceExportDeclaration;
+const isNamespaceImport = (node) => node.getKind() == typescript_1.SyntaxKind.NamespaceImport;
 const isNeverKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.NeverKeyword;
 const isNullKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.NullKeyword;
 const isNumberKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.NumberKeyword;
@@ -228,6 +233,31 @@ const processImportAttributes = (importAttributes) => {
         "elements": importAttributes.getElements().map(processNode).filter((node) => node != null),
     };
 };
+const processImportClause = (importClause) => {
+    return {
+        "kind": importClause.getKindName(),
+        "isTypeOnly": importClause.compilerNode.isTypeOnly,
+        "name": importClause.compilerNode.name ? processNode((0, ts_morph_1.createWrappedNode)(importClause.compilerNode.name)) : undefined,
+        "namedBinding": processNode(importClause.getNamedBindings()),
+    };
+};
+const processImportDeclaration = (importDeclaration) => {
+    return {
+        "kind": importDeclaration.getKindName(),
+        "modifiers": importDeclaration.compilerNode.modifiers?.map((n) => processNode((0, ts_morph_1.createWrappedNode)(n))).filter((node) => node != null),
+        "importClause": processNode(importDeclaration.getImportClause()),
+        "moduleSpecifier": processNode(importDeclaration.getModuleSpecifier()),
+        "importAttributes": processNode(importDeclaration.getAttributes()),
+    };
+};
+const processImportSpecifier = (importSpecifier) => {
+    return {
+        "kind": importSpecifier.getKindName(),
+        "isTypeOnly": importSpecifier.compilerNode.isTypeOnly,
+        "name": processNode(importSpecifier.getNameNode()),
+        "propertyName": importSpecifier.compilerNode.propertyName ? processNode((0, ts_morph_1.createWrappedNode)(importSpecifier.compilerNode.propertyName)) : undefined,
+    };
+};
 const processImportType = (importType) => {
     return {
         "kind": importType.getKindName(),
@@ -329,6 +359,18 @@ const processModuleDeclaration = (moduleDeclaration) => {
         "kind": moduleDeclaration.getKindName(),
         "name": processNode(moduleDeclaration.getNameNode()),
         "body": processNode(moduleDeclaration.getBody()),
+    };
+};
+const processNamedImports = (namedImports) => {
+    return {
+        "kind": namedImports.getKindName(),
+        "elements": namedImports.getElements().map(processNode).filter((node) => node != null),
+    };
+};
+const processNamespaceImport = (namespaceImport) => {
+    return {
+        "kind": namespaceImport.getKindName(),
+        "name": processNode(namespaceImport.getNameNode()),
     };
 };
 const processNeverKeyword = (neverKeyword) => {
@@ -639,8 +681,14 @@ const processNode = (node) => {
     else if (isImportAttributes(node)) {
         return processImportAttributes(node);
     }
+    else if (isImportClause(node)) {
+        return processImportClause(node);
+    }
     else if (isImportDeclaration(node)) {
-        return null;
+        return processImportDeclaration(node);
+    }
+    else if (isImportSpecifier(node)) {
+        return processImportSpecifier(node);
     }
     else if (isImportType(node)) {
         return processImportType(node);
@@ -680,6 +728,15 @@ const processNode = (node) => {
     }
     else if (isModuleDeclaration(node)) {
         return processModuleDeclaration(node);
+    }
+    else if (isNamedImports(node)) {
+        return processNamedImports(node);
+    }
+    else if (isNamespaceImport(node)) {
+        return processNamespaceImport(node);
+    }
+    else if (isNamespaceExport(node)) {
+        return null;
     }
     else if (isNeverKeyword(node)) {
         return processNeverKeyword(node);

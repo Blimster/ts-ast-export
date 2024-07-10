@@ -1,4 +1,4 @@
-import { ArrayTypeNode, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportDeclaration, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, Node, NumericLiteral, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
+import { ArrayTypeNode, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportClause, ImportDeclaration, ImportSpecifier, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, NamedImports, NamespaceExport, NamespaceImport, Node, NumericLiteral, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
 import { SyntaxKind } from "typescript";
 
 const isAnyKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.AnyKeyword;
@@ -23,7 +23,9 @@ const isHeritageClause = (node: Node): node is HeritageClause => node.getKind() 
 const isIdentifier = (node: Node): node is Identifier => node.getKind() == SyntaxKind.Identifier;
 const isImportAttribute = (node: Node): node is ImportAttribute => node.getKind() == SyntaxKind.ImportAttribute;
 const isImportAttributes = (node: Node): node is ImportAttributes => node.getKind() == SyntaxKind.ImportAttributes;
+const isImportClause = (node: Node): node is ImportClause => node.getKind() == SyntaxKind.ImportClause;
 const isImportDeclaration = (node: Node): node is ImportDeclaration => node.getKind() == SyntaxKind.ImportDeclaration;
+const isImportSpecifier = (node: Node): node is ImportSpecifier => node.getKind() == SyntaxKind.ImportSpecifier;
 const isImportType = (node: Node): node is ImportTypeNode => node.getKind() == SyntaxKind.ImportType;
 const isIndexedAccessType = (node: Node): node is IndexedAccessTypeNode => node.getKind() == SyntaxKind.IndexedAccessType;
 const isIndexSignature = (node: Node): node is IndexSignatureDeclaration => node.getKind() == SyntaxKind.IndexSignature;
@@ -37,6 +39,9 @@ const isMethodSignature = (node: Node): node is MethodSignature => node.getKind(
 const isModifier = (node: Node): boolean => [SyntaxKind.AbstractKeyword, SyntaxKind.DeclareKeyword, SyntaxKind.ExportKeyword, SyntaxKind.PrivateKeyword, SyntaxKind.ProtectedKeyword, SyntaxKind.ReadonlyKeyword, SyntaxKind.StaticKeyword].includes(node.getKind());
 const isModuleBlock = (node: Node): node is ModuleBlock => node.getKind() == SyntaxKind.ModuleBlock;
 const isModuleDeclaration = (node: Node): node is ModuleDeclaration => node.getKind() == SyntaxKind.ModuleDeclaration;
+const isNamedImports = (node: Node): node is NamedImports => node.getKind() == SyntaxKind.NamedImports;
+const isNamespaceExport = (node: Node): node is NamespaceExport => node.getKind() == SyntaxKind.NamespaceExportDeclaration;
+const isNamespaceImport = (node: Node): node is NamespaceImport => node.getKind() == SyntaxKind.NamespaceImport;
 const isNeverKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.NeverKeyword;
 const isNullKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.NullKeyword;
 const isNumberKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.NumberKeyword;
@@ -249,6 +254,34 @@ const processImportAttributes = (importAttributes: ImportAttributes): any => {
     };
 };
 
+const processImportClause = (importClause: ImportClause): any => {
+    return {
+        "kind": importClause.getKindName(),
+        "isTypeOnly": importClause.compilerNode.isTypeOnly,
+        "name": importClause.compilerNode.name ? processNode(createWrappedNode(importClause.compilerNode.name)) : undefined,
+        "namedBinding": processNode(importClause.getNamedBindings()),
+    };
+};
+
+const processImportDeclaration = (importDeclaration: ImportDeclaration): any => {
+    return {
+        "kind": importDeclaration.getKindName(),
+        "modifiers": importDeclaration.compilerNode.modifiers?.map((n) => processNode(createWrappedNode(n))).filter((node) => node != null),
+        "importClause": processNode(importDeclaration.getImportClause()),
+        "moduleSpecifier": processNode(importDeclaration.getModuleSpecifier()),
+        "importAttributes": processNode(importDeclaration.getAttributes()),
+    };
+}
+
+const processImportSpecifier = (importSpecifier: ImportSpecifier): any => {
+    return {
+        "kind": importSpecifier.getKindName(),
+        "isTypeOnly": importSpecifier.compilerNode.isTypeOnly,
+        "name": processNode(importSpecifier.getNameNode()),
+        "propertyName": importSpecifier.compilerNode.propertyName ? processNode(createWrappedNode(importSpecifier.compilerNode.propertyName)) : undefined,
+    };
+};
+
 const processImportType = (importType: ImportTypeNode): any => {
     return {
         "kind": importType.getKindName(),
@@ -362,6 +395,20 @@ const processModuleDeclaration = (moduleDeclaration: ModuleDeclaration): any => 
         "kind": moduleDeclaration.getKindName(),
         "name": processNode(moduleDeclaration.getNameNode()),
         "body": processNode(moduleDeclaration.getBody()),
+    };
+};
+
+const processNamedImports = (namedImports: NamedImports): any => {
+    return {
+        "kind": namedImports.getKindName(),
+        "elements": namedImports.getElements().map(processNode).filter((node) => node != null),
+    };
+};
+
+const processNamespaceImport = (namespaceImport: NamespaceImport): any => {
+    return {
+        "kind": namespaceImport.getKindName(),
+        "name": processNode(namespaceImport.getNameNode()),
     };
 };
 
@@ -686,8 +733,12 @@ const processNode = (node?: Node): any => {
         return processImportAttribute(node);
     } else if (isImportAttributes(node)) {
         return processImportAttributes(node);
+    } else if (isImportClause(node)) {
+        return processImportClause(node);
     } else if (isImportDeclaration(node)) {
-        return null;
+        return processImportDeclaration(node);
+    } else if (isImportSpecifier(node)) {
+        return processImportSpecifier(node);
     } else if (isImportType(node)) {
         return processImportType(node);
     } else if (isIndexedAccessType(node)) {
@@ -714,6 +765,12 @@ const processNode = (node?: Node): any => {
         return processModuleBlock(node);
     } else if (isModuleDeclaration(node)) {
         return processModuleDeclaration(node);
+    } else if (isNamedImports(node)) {
+        return processNamedImports(node);
+    } else if (isNamespaceImport(node)) {
+        return processNamespaceImport(node);
+    } else if (isNamespaceExport(node)) {
+        return null;
     } else if (isNeverKeyword(node)) {
         return processNeverKeyword(node);
     } else if (isNullKeyword(node)) {
