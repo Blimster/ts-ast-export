@@ -8,7 +8,7 @@ const isCallSignature = (node: Node): node is CallSignatureDeclaration => node.g
 const isClassDeclaration = (node: Node): node is ClassDeclaration => node.getKind() == SyntaxKind.ClassDeclaration;
 const isComputedPropertyName = (node: Node): node is ComputedPropertyName => node.getKind() == SyntaxKind.ComputedPropertyName;
 const isConditionalType = (node: Node): node is ConditionalTypeNode => node.getKind() == SyntaxKind.ConditionalType;
-const isConstructor = (node: Node): node is ConstructorDeclaration => node.getKind() == SyntaxKind.Constructor;
+const isConstructordeclaration = (node: Node): node is ConstructorDeclaration => node.getKind() == SyntaxKind.Constructor;
 const isConstructorType = (node: Node): node is ConstructorTypeNode => node.getKind() == SyntaxKind.ConstructorType;
 const isConstructSignature = (node: Node): node is ConstructSignatureDeclaration => node.getKind() == SyntaxKind.ConstructSignature;
 const isEnumDeclaration = (node: Node): node is EnumDeclaration => node.getKind() == SyntaxKind.EnumDeclaration;
@@ -134,7 +134,7 @@ const processConditionalType = (conditionalType: ConditionalTypeNode): any => {
     };
 };
 
-const processConstructor = (constructor: ConstructorDeclaration): any => {
+const processConstructorDeclaration = (constructor: ConstructorDeclaration): any => {
     return {
         "kind": constructor.getKindName(),
         "typeParameters": constructor.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -259,7 +259,7 @@ const processImportClause = (importClause: ImportClause): any => {
         "kind": importClause.getKindName(),
         "isTypeOnly": importClause.compilerNode.isTypeOnly,
         "name": importClause.compilerNode.name ? processNode(createWrappedNode(importClause.compilerNode.name)) : undefined,
-        "namedBinding": processNode(importClause.getNamedBindings()),
+        "namedBindings": processNode(importClause.getNamedBindings()),
     };
 };
 
@@ -393,6 +393,7 @@ const processModuleBlock = (moduleBlock: ModuleBlock): any => {
 const processModuleDeclaration = (moduleDeclaration: ModuleDeclaration): any => {
     return {
         "kind": moduleDeclaration.getKindName(),
+        "modifiers": moduleDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(moduleDeclaration.getNameNode()),
         "body": processNode(moduleDeclaration.getBody()),
     };
@@ -464,6 +465,9 @@ const processParenthesizedType = (parenthesizedType: ParenthesizedTypeNode): any
 const processPrefixUnaryExpression = (prefixUnaryExpression: PrefixUnaryExpression): any => {
     return {
         "kind": prefixUnaryExpression.getKindName(),
+        "operator": {
+            "kind": SyntaxKind[prefixUnaryExpression.getOperatorToken().toString()]
+        },
         "operand": processNode(prefixUnaryExpression.getOperand()),
     };
 };
@@ -703,8 +707,8 @@ const processNode = (node?: Node): any => {
         return processComputedPropertyName(node);
     } else if (isConditionalType(node)) {
         return processConditionalType(node);
-    } else if (isConstructor(node)) {
-        return processConstructor(node);
+    } else if (isConstructordeclaration(node)) {
+        return processConstructorDeclaration(node);
     } else if (isConstructorType(node)) {
         return processConstructorType(node);
     } else if (isConstructSignature(node)) {

@@ -10,7 +10,7 @@ const isCallSignature = (node) => node.getKind() == typescript_1.SyntaxKind.Call
 const isClassDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.ClassDeclaration;
 const isComputedPropertyName = (node) => node.getKind() == typescript_1.SyntaxKind.ComputedPropertyName;
 const isConditionalType = (node) => node.getKind() == typescript_1.SyntaxKind.ConditionalType;
-const isConstructor = (node) => node.getKind() == typescript_1.SyntaxKind.Constructor;
+const isConstructordeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.Constructor;
 const isConstructorType = (node) => node.getKind() == typescript_1.SyntaxKind.ConstructorType;
 const isConstructSignature = (node) => node.getKind() == typescript_1.SyntaxKind.ConstructSignature;
 const isEnumDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.EnumDeclaration;
@@ -128,7 +128,7 @@ const processConditionalType = (conditionalType) => {
         "falseType": processNode(conditionalType.getFalseType()),
     };
 };
-const processConstructor = (constructor) => {
+const processConstructorDeclaration = (constructor) => {
     return {
         "kind": constructor.getKindName(),
         "typeParameters": constructor.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -238,7 +238,7 @@ const processImportClause = (importClause) => {
         "kind": importClause.getKindName(),
         "isTypeOnly": importClause.compilerNode.isTypeOnly,
         "name": importClause.compilerNode.name ? processNode((0, ts_morph_1.createWrappedNode)(importClause.compilerNode.name)) : undefined,
-        "namedBinding": processNode(importClause.getNamedBindings()),
+        "namedBindings": processNode(importClause.getNamedBindings()),
     };
 };
 const processImportDeclaration = (importDeclaration) => {
@@ -357,6 +357,7 @@ const processModuleBlock = (moduleBlock) => {
 const processModuleDeclaration = (moduleDeclaration) => {
     return {
         "kind": moduleDeclaration.getKindName(),
+        "modifiers": moduleDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(moduleDeclaration.getNameNode()),
         "body": processNode(moduleDeclaration.getBody()),
     };
@@ -418,6 +419,9 @@ const processParenthesizedType = (parenthesizedType) => {
 const processPrefixUnaryExpression = (prefixUnaryExpression) => {
     return {
         "kind": prefixUnaryExpression.getKindName(),
+        "operator": {
+            "kind": typescript_1.SyntaxKind[prefixUnaryExpression.getOperatorToken().toString()]
+        },
         "operand": processNode(prefixUnaryExpression.getOperand()),
     };
 };
@@ -636,8 +640,8 @@ const processNode = (node) => {
     else if (isConditionalType(node)) {
         return processConditionalType(node);
     }
-    else if (isConstructor(node)) {
-        return processConstructor(node);
+    else if (isConstructordeclaration(node)) {
+        return processConstructorDeclaration(node);
     }
     else if (isConstructorType(node)) {
         return processConstructorType(node);
