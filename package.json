@@ -1,6 +1,6 @@
 {
   "name": "ts-ast-export",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Exports the AST of all TypeScript declaration files of a NPM package to JSON.",
   "main": "index.js",
   "bin": {
