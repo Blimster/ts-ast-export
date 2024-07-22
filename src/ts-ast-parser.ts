@@ -228,6 +228,9 @@ const processGetAccessor = (getAccessor: GetAccessorDeclaration): any => {
 const processHeritageClause = (heritageClause: HeritageClause): any => {
     return {
         "kind": heritageClause.getKindName(),
+        "token": {
+            "kind": SyntaxKind[heritageClause.getToken()]
+        },
         "types": heritageClause.getTypeNodes().map(processNode).filter((node) => node != null),
     };
 };
@@ -601,6 +604,9 @@ const processTypeLiteral = (typeLiteral: TypeLiteralNode): any => {
 const processTypeOperator = (typeOperator: TypeOperatorTypeNode): any => {
     return {
         "kind": typeOperator.getKindName(),
+        "operator": {
+            "kind": SyntaxKind[typeOperator.getOperator().toString()]
+        },
         "type": processNode(typeOperator.getTypeNode()),
     };
 };

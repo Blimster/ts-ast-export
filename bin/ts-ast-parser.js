@@ -211,6 +211,9 @@ const processGetAccessor = (getAccessor) => {
 const processHeritageClause = (heritageClause) => {
     return {
         "kind": heritageClause.getKindName(),
+        "token": {
+            "kind": typescript_1.SyntaxKind[heritageClause.getToken()]
+        },
         "types": heritageClause.getTypeNodes().map(processNode).filter((node) => node != null),
     };
 };
@@ -538,6 +541,9 @@ const processTypeLiteral = (typeLiteral) => {
 const processTypeOperator = (typeOperator) => {
     return {
         "kind": typeOperator.getKindName(),
+        "operator": {
+            "kind": typescript_1.SyntaxKind[typeOperator.getOperator().toString()]
+        },
         "type": processNode(typeOperator.getTypeNode()),
     };
 };
