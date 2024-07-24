@@ -111,8 +111,9 @@ const processClassDeclaration = (classDeclaration: ClassDeclaration): any => {
     return {
         "kind": classDeclaration.getKindName(),
         "modifiers": classDeclaration.getModifiers().map(processNode).filter((node) => node != null),
-        "heritageClauses": classDeclaration.getHeritageClauses().map(processNode).filter((node) => node != null),
         "name": processNode(classDeclaration.getNameNode()),
+        "typeParameters": classDeclaration.getTypeParameters().map(processNode).filter((node) => node != null),
+        "heritageClauses": classDeclaration.getHeritageClauses().map(processNode).filter((node) => node != null),
         "members": classDeclaration.getMembers().map(processNode).filter((node) => node != null),
     };
 }
@@ -229,7 +230,7 @@ const processHeritageClause = (heritageClause: HeritageClause): any => {
     return {
         "kind": heritageClause.getKindName(),
         "token": {
-            "kind": SyntaxKind[heritageClause.getToken()]
+            "kind": heritageClause.getToken() == SyntaxKind.ExtendsKeyword ? "ExtendsKeyword" : "ImplementsKeyword",
         },
         "types": heritageClause.getTypeNodes().map(processNode).filter((node) => node != null),
     };
@@ -869,7 +870,13 @@ function parse(directory: string): any {
 
     const sourceFiles = <any>[];
     project.getSourceFiles().forEach((sourceFile: SourceFile) => {
-        sourceFiles.push(processNode(sourceFile));
+        const processedSourceFile = processSourceFile(sourceFile);
+        sourceFiles.push({
+            "kind": processedSourceFile.kind,
+            "path": sourceFile.getFilePath().substring(sourceFile.getFilePath().indexOf(directory) + directory.length, sourceFile.getFilePath().length - sourceFile.getBaseName().length),
+            "baseName": processedSourceFile.baseName,
+            "statements": processedSourceFile.statements
+        });
     });
 
     return {
