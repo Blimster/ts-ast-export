@@ -1,8 +1,12 @@
-import { ArrayTypeNode, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportClause, ImportDeclaration, ImportSpecifier, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, NamedImports, NamespaceExport, NamespaceImport, Node, NumericLiteral, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
-import { SyntaxKind } from "typescript";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { ArrayBindingPattern, ArrayTypeNode, BindingElement, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportClause, ImportDeclaration, ImportSpecifier, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, NamedImports, NamespaceExport, NamespaceImport, Node, NumericLiteral, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, TemplateHead, TemplateLiteralTypeNode, TemplateMiddle, TemplateTail, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
+import { SyntaxKind, TemplateLiteralTypeSpan } from "typescript";
 
 const isAnyKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.AnyKeyword;
+const isArrayBindingPattern = (node: Node): node is ArrayBindingPattern => node.getKind() == SyntaxKind.ArrayBindingPattern;
 const isArrayType = (node: Node): node is ArrayTypeNode => node.getKind() == SyntaxKind.ArrayType;
+const isBigIntKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.BigIntKeyword;
+const isBindingElement = (node: Node): node is BindingElement => node.getKind() == SyntaxKind.BindingElement;
 const isBooleanKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.BooleanKeyword;
 const isCallSignature = (node: Node): node is CallSignatureDeclaration => node.getKind() == SyntaxKind.CallSignature;
 const isClassDeclaration = (node: Node): node is ClassDeclaration => node.getKind() == SyntaxKind.ClassDeclaration;
@@ -32,10 +36,12 @@ const isIndexSignature = (node: Node): node is IndexSignatureDeclaration => node
 const isInferType = (node: Node): node is InferTypeNode => node.getKind() == SyntaxKind.InferType;
 const isInterfaceDeclaration = (node: Node): node is InterfaceDeclaration => node.getKind() == SyntaxKind.InterfaceDeclaration;
 const isIntersectionType = (node: Node): node is IntersectionTypeNode => node.getKind() == SyntaxKind.IntersectionType;
+const isIntrinsicKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.IntrinsicKeyword;
 const isLiteralType = (node: Node): node is LiteralTypeNode => node.getKind() == SyntaxKind.LiteralType;
 const isMappedType = (node: Node): node is MappedTypeNode => node.getKind() == SyntaxKind.MappedType;
 const isMethodDeclaration = (node: Node): node is MethodDeclaration => node.getKind() == SyntaxKind.MethodDeclaration;
 const isMethodSignature = (node: Node): node is MethodSignature => node.getKind() == SyntaxKind.MethodSignature;
+const isMinusToken = (node: Node): boolean => node.getKind() == SyntaxKind.MinusToken;
 const isModifier = (node: Node): boolean => [SyntaxKind.AbstractKeyword, SyntaxKind.DeclareKeyword, SyntaxKind.ExportKeyword, SyntaxKind.PrivateKeyword, SyntaxKind.ProtectedKeyword, SyntaxKind.ReadonlyKeyword, SyntaxKind.StaticKeyword].includes(node.getKind());
 const isModuleBlock = (node: Node): node is ModuleBlock => node.getKind() == SyntaxKind.ModuleBlock;
 const isModuleDeclaration = (node: Node): node is ModuleDeclaration => node.getKind() == SyntaxKind.ModuleDeclaration;
@@ -61,6 +67,11 @@ const isSourceFile = (node: Node): node is SourceFile => node.getKind() == Synta
 const isStringKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.StringKeyword;
 const isStringLiteral = (node: Node): boolean => node.getKind() == SyntaxKind.StringLiteral;
 const isSymbolKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.SymbolKeyword;
+const isTemplateHead = (node: Node): node is TemplateHead => node.getKind() == SyntaxKind.TemplateHead;
+const isTemplateLiteralType = (node: Node): node is TemplateLiteralTypeNode => node.getKind() == SyntaxKind.TemplateLiteralType;
+const isTemplateLiteralTypeSpan = (node: Node): boolean => node.getKind() == SyntaxKind.TemplateLiteralTypeSpan;
+const isTemplateMiddle = (node: Node): node is TemplateMiddle => node.getKind() == SyntaxKind.TemplateMiddle;
+const isTemplateTail = (node: Node): node is TemplateTail => node.getKind() == SyntaxKind.TemplateTail;
 const isThisType = (node: Node): node is ThisTypeNode => node.getKind() == SyntaxKind.ThisType;
 const isTrueKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.TrueKeyword;
 const isTupleType = (node: Node): node is TupleTypeNode => node.getKind() == SyntaxKind.TupleType;
@@ -85,6 +96,13 @@ const processAnyKeyword = (anyKeyword: Node): any => {
     };
 };
 
+const processArrayBindingPattern = (arrayBindingPattern: ArrayBindingPattern): any => {
+    return {
+        "kind": arrayBindingPattern.getKindName(),
+        "elements": arrayBindingPattern.getElements().map(processNode).filter((node) => node != null),
+    };
+}
+
 const processArrayType = (arrayType: ArrayTypeNode): any => {
     return {
         "kind": arrayType.getKindName(),
@@ -97,6 +115,23 @@ const processBooleanKeyword = (booleanKeyword: Node): any => {
         "kind": booleanKeyword.getKindName(),
     };
 };
+
+const processBigIntKeyword = (bigIntKeyword: Node): any => {
+    return {
+        "kind": bigIntKeyword.getKindName(),
+    };
+};
+
+const processBindingElement = (bindingElement: BindingElement): any => {
+    return {
+        "kind": bindingElement.getKindName(),
+        "dotDotDotToken": processNode(bindingElement.getDotDotDotToken()),
+        "propertyName": processNode(bindingElement.getPropertyNameNode()),
+        "name": processNode(bindingElement.getNameNode()),
+        "initializer": processNode(bindingElement.getInitializer()),
+    };
+};
+
 
 const processCallSignature = (callSignature: CallSignatureDeclaration): any => {
     return {
@@ -338,6 +373,12 @@ const processIntersectionType = (intersectionType: IntersectionTypeNode): any =>
     };
 };
 
+const processIntrinsicKeyword = (intrinsicKeyword: Node): any => {
+    return {
+        "kind": intrinsicKeyword.getKindName(),
+    };
+}
+
 const processLiteralType = (literalType: LiteralTypeNode): any => {
     return {
         "kind": literalType.getKindName(),
@@ -380,6 +421,12 @@ const processMethodSignature = (methodSignature: MethodSignature): any => {
         "type": processNode(methodSignature.getReturnTypeNode())
     };
 };
+
+const processMinusToken = (minusToken: Node): any => {
+    return {
+        "kind": minusToken.getKindName(),
+    };
+}
 
 const processModifier = (modifier: Node): any => {
     return {
@@ -566,6 +613,45 @@ const processSymbolKeyword = (symbolKeyword: Node): any => {
     };
 };
 
+const processTemplateHead = (templateHead: TemplateHead): any => {
+    return {
+        "kind": templateHead.getKindName(),
+        "text": templateHead.getText(),
+    };
+};
+
+const processTemplateLiteralType = (templateLiteralType: TemplateLiteralTypeNode): any => {
+    return {
+        "kind": templateLiteralType.getKindName(),
+        "head": processNode(templateLiteralType.getHead()),
+        "templateSpans": templateLiteralType.getTemplateSpans().map(processNode).filter((node) => node != null),
+    };
+}
+
+const processTemplateLiteralTypeSpan = (templateLiteralTypeSpan: Node): any => {
+    const compilerNode = templateLiteralTypeSpan.compilerNode as TemplateLiteralTypeSpan;
+    return {
+        "kind": templateLiteralTypeSpan.getKindName(),
+        "type": processNode(createWrappedNode(compilerNode.type)),
+        "literal": processNode(createWrappedNode(compilerNode.literal)),
+    };
+}
+
+const processTemplateMiddle = (templateTail: TemplateMiddle): any => {
+    return {
+        "kind": templateTail.getKindName(),
+        "text": templateTail.getText(),
+    };
+}
+
+
+const processTemplateTail = (templateTail: TemplateTail): any => {
+    return {
+        "kind": templateTail.getKindName(),
+        "text": templateTail.getText(),
+    };
+}
+
 const processThisType = (thisType: ThisTypeNode): any => {
     return {
         "kind": thisType.getKindName(),
@@ -702,10 +788,16 @@ const processNode = (node?: Node): any => {
         return null;
     } else if (isAnyKeyword(node)) {
         return processAnyKeyword(node);
+    } else if (isArrayBindingPattern(node)) {
+        return processArrayBindingPattern(node);
     } else if (isArrayType(node)) {
         return processArrayType(node);
     } else if (isBooleanKeyword(node)) {
         return processBooleanKeyword(node);
+    } else if (isBigIntKeyword(node)) {
+        return processBigIntKeyword(node);
+    } else if (isBindingElement(node)) {
+        return processBindingElement(node);
     } else if (isCallSignature(node)) {
         return processCallSignature(node);
     } else if (isClassDeclaration(node)) {
@@ -762,6 +854,8 @@ const processNode = (node?: Node): any => {
         return processInterfaceDeclaration(node);
     } else if (isIntersectionType(node)) {
         return processIntersectionType(node);
+    } else if (isIntrinsicKeyword(node)) {
+        return processIntrinsicKeyword(node);
     } else if (isLiteralType(node)) {
         return processLiteralType(node);
     } else if (isMappedType(node)) {
@@ -770,6 +864,8 @@ const processNode = (node?: Node): any => {
         return processMethodDeclaration(node);
     } else if (isMethodSignature(node)) {
         return processMethodSignature(node);
+    } else if (isMinusToken(node)) {
+        return processMinusToken(node);
     } else if (isModifier(node)) {
         return processModifier(node);
     } else if (isModuleBlock(node)) {
@@ -820,6 +916,16 @@ const processNode = (node?: Node): any => {
         return processStringLiteral(node);
     } else if (isSymbolKeyword(node)) {
         return processSymbolKeyword(node);
+    } else if (isTemplateHead(node)) {
+        return processTemplateHead(node);
+    } else if (isTemplateLiteralType(node)) {
+        return processTemplateLiteralType(node);
+    } else if (isTemplateLiteralTypeSpan(node)) {
+        return processTemplateLiteralTypeSpan(node);
+    } else if (isTemplateMiddle(node)) {
+        return processTemplateMiddle(node);
+    } else if (isTemplateTail(node)) {
+        return processTemplateTail(node);
     } else if (isThisType(node)) {
         return processThisType(node);
     } else if (isTrueKeyword(node)) {
@@ -859,14 +965,19 @@ const processNode = (node?: Node): any => {
     }
 };
 
-function parse(directory: string): any {
+function parseFromNpm(directory: string): any {
     const project = new Project({
         compilerOptions: {
             target: ScriptTarget.ESNext,
         },
         skipAddingFilesFromTsConfig: true
     });
-    project.addSourceFilesAtPaths(directory + "/**/*.d.ts");
+
+    const packageJson = JSON.parse(readFileSync(directory + "/package.json").toString());
+    const typesFile = packageJson.types;
+
+    //project.addSourceFilesAtPaths(directory + "/**/*.d.ts");
+    project.addSourceFilesAtPaths(directory + "/" + typesFile);
 
     const sourceFiles = <any>[];
     project.getSourceFiles().forEach((sourceFile: SourceFile) => {
@@ -886,4 +997,53 @@ function parse(directory: string): any {
     };
 }
 
-export { parse };
+async function httpDownload(directory: string, root: string, tag: string): Promise<void> {
+    const filename = directory + root + ".d.ts";
+    const response = await fetch("https://raw.githubusercontent.com/microsoft/TypeScript/" + tag + "/src/lib/" + root + ".d.ts");
+    const content = await response.text();
+
+    writeFileSync(directory + root + ".d.ts", content);
+
+    const matches = content.matchAll(/\/\/\/ <reference lib="(.*)" \/>/g);
+    for(const match of matches){    
+        await httpDownload(directory, match[1], tag);
+    }
+}
+
+async function parseFromTypescript(directory: string, root: string, tag: string): Promise<any> {
+    if (!existsSync(directory)){
+        mkdirSync(directory);
+    }
+
+    await httpDownload(directory, root, tag);
+
+    const project = new Project({
+        compilerOptions: {
+            target: ScriptTarget.ESNext,
+        },
+        skipAddingFilesFromTsConfig: true
+    });
+
+    project.addSourceFilesAtPaths(directory + "**/*.d.ts");
+
+    const sourceFiles = <any>[];
+    project.getSourceFiles().forEach((sourceFile: SourceFile) => {
+        const processedSourceFile = processSourceFile(sourceFile);
+        sourceFiles.push({
+            "kind": processedSourceFile.kind,
+            "path": sourceFile.getFilePath().substring(sourceFile.getFilePath().indexOf(directory) + directory.length, sourceFile.getFilePath().length - sourceFile.getBaseName().length),
+            "baseName": processedSourceFile.baseName,
+            "statements": processedSourceFile.statements
+        });
+    });
+
+    return {
+        "name": root,
+        "version": tag,
+        "sourceFiles": sourceFiles
+    };
+
+}
+
+export { parseFromNpm, parseFromTypescript };
+

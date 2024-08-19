@@ -1,10 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parse = parse;
+exports.parseFromNpm = parseFromNpm;
+exports.parseFromTypescript = parseFromTypescript;
+const fs_1 = require("fs");
 const ts_morph_1 = require("ts-morph");
 const typescript_1 = require("typescript");
 const isAnyKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.AnyKeyword;
+const isArrayBindingPattern = (node) => node.getKind() == typescript_1.SyntaxKind.ArrayBindingPattern;
 const isArrayType = (node) => node.getKind() == typescript_1.SyntaxKind.ArrayType;
+const isBigIntKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.BigIntKeyword;
+const isBindingElement = (node) => node.getKind() == typescript_1.SyntaxKind.BindingElement;
 const isBooleanKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.BooleanKeyword;
 const isCallSignature = (node) => node.getKind() == typescript_1.SyntaxKind.CallSignature;
 const isClassDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.ClassDeclaration;
@@ -34,10 +39,12 @@ const isIndexSignature = (node) => node.getKind() == typescript_1.SyntaxKind.Ind
 const isInferType = (node) => node.getKind() == typescript_1.SyntaxKind.InferType;
 const isInterfaceDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.InterfaceDeclaration;
 const isIntersectionType = (node) => node.getKind() == typescript_1.SyntaxKind.IntersectionType;
+const isIntrinsicKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.IntrinsicKeyword;
 const isLiteralType = (node) => node.getKind() == typescript_1.SyntaxKind.LiteralType;
 const isMappedType = (node) => node.getKind() == typescript_1.SyntaxKind.MappedType;
 const isMethodDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.MethodDeclaration;
 const isMethodSignature = (node) => node.getKind() == typescript_1.SyntaxKind.MethodSignature;
+const isMinusToken = (node) => node.getKind() == typescript_1.SyntaxKind.MinusToken;
 const isModifier = (node) => [typescript_1.SyntaxKind.AbstractKeyword, typescript_1.SyntaxKind.DeclareKeyword, typescript_1.SyntaxKind.ExportKeyword, typescript_1.SyntaxKind.PrivateKeyword, typescript_1.SyntaxKind.ProtectedKeyword, typescript_1.SyntaxKind.ReadonlyKeyword, typescript_1.SyntaxKind.StaticKeyword].includes(node.getKind());
 const isModuleBlock = (node) => node.getKind() == typescript_1.SyntaxKind.ModuleBlock;
 const isModuleDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.ModuleDeclaration;
@@ -63,6 +70,11 @@ const isSourceFile = (node) => node.getKind() == typescript_1.SyntaxKind.SourceF
 const isStringKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.StringKeyword;
 const isStringLiteral = (node) => node.getKind() == typescript_1.SyntaxKind.StringLiteral;
 const isSymbolKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.SymbolKeyword;
+const isTemplateHead = (node) => node.getKind() == typescript_1.SyntaxKind.TemplateHead;
+const isTemplateLiteralType = (node) => node.getKind() == typescript_1.SyntaxKind.TemplateLiteralType;
+const isTemplateLiteralTypeSpan = (node) => node.getKind() == typescript_1.SyntaxKind.TemplateLiteralTypeSpan;
+const isTemplateMiddle = (node) => node.getKind() == typescript_1.SyntaxKind.TemplateMiddle;
+const isTemplateTail = (node) => node.getKind() == typescript_1.SyntaxKind.TemplateTail;
 const isThisType = (node) => node.getKind() == typescript_1.SyntaxKind.ThisType;
 const isTrueKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.TrueKeyword;
 const isTupleType = (node) => node.getKind() == typescript_1.SyntaxKind.TupleType;
@@ -85,6 +97,12 @@ const processAnyKeyword = (anyKeyword) => {
         "kind": anyKeyword.getKindName(),
     };
 };
+const processArrayBindingPattern = (arrayBindingPattern) => {
+    return {
+        "kind": arrayBindingPattern.getKindName(),
+        "elements": arrayBindingPattern.getElements().map(processNode).filter((node) => node != null),
+    };
+};
 const processArrayType = (arrayType) => {
     return {
         "kind": arrayType.getKindName(),
@@ -94,6 +112,20 @@ const processArrayType = (arrayType) => {
 const processBooleanKeyword = (booleanKeyword) => {
     return {
         "kind": booleanKeyword.getKindName(),
+    };
+};
+const processBigIntKeyword = (bigIntKeyword) => {
+    return {
+        "kind": bigIntKeyword.getKindName(),
+    };
+};
+const processBindingElement = (bindingElement) => {
+    return {
+        "kind": bindingElement.getKindName(),
+        "dotDotDotToken": processNode(bindingElement.getDotDotDotToken()),
+        "propertyName": processNode(bindingElement.getPropertyNameNode()),
+        "name": processNode(bindingElement.getNameNode()),
+        "initializer": processNode(bindingElement.getInitializer()),
     };
 };
 const processCallSignature = (callSignature) => {
@@ -308,6 +340,11 @@ const processIntersectionType = (intersectionType) => {
         "types": intersectionType.getTypeNodes().map(processNode).filter((node) => node != null),
     };
 };
+const processIntrinsicKeyword = (intrinsicKeyword) => {
+    return {
+        "kind": intrinsicKeyword.getKindName(),
+    };
+};
 const processLiteralType = (literalType) => {
     return {
         "kind": literalType.getKindName(),
@@ -345,6 +382,11 @@ const processMethodSignature = (methodSignature) => {
         "typeParameters": methodSignature.getTypeParameters().map(processNode).filter((node) => node != null),
         "parameters": methodSignature.getParameters().map(processNode).filter((node) => node != null),
         "type": processNode(methodSignature.getReturnTypeNode())
+    };
+};
+const processMinusToken = (minusToken) => {
+    return {
+        "kind": minusToken.getKindName(),
     };
 };
 const processModifier = (modifier) => {
@@ -508,6 +550,39 @@ const processSymbolKeyword = (symbolKeyword) => {
         "kind": symbolKeyword.getKindName(),
     };
 };
+const processTemplateHead = (templateHead) => {
+    return {
+        "kind": templateHead.getKindName(),
+        "text": templateHead.getText(),
+    };
+};
+const processTemplateLiteralType = (templateLiteralType) => {
+    return {
+        "kind": templateLiteralType.getKindName(),
+        "head": processNode(templateLiteralType.getHead()),
+        "templateSpans": templateLiteralType.getTemplateSpans().map(processNode).filter((node) => node != null),
+    };
+};
+const processTemplateLiteralTypeSpan = (templateLiteralTypeSpan) => {
+    const compilerNode = templateLiteralTypeSpan.compilerNode;
+    return {
+        "kind": templateLiteralTypeSpan.getKindName(),
+        "type": processNode((0, ts_morph_1.createWrappedNode)(compilerNode.type)),
+        "literal": processNode((0, ts_morph_1.createWrappedNode)(compilerNode.literal)),
+    };
+};
+const processTemplateMiddle = (templateTail) => {
+    return {
+        "kind": templateTail.getKindName(),
+        "text": templateTail.getText(),
+    };
+};
+const processTemplateTail = (templateTail) => {
+    return {
+        "kind": templateTail.getKindName(),
+        "text": templateTail.getText(),
+    };
+};
 const processThisType = (thisType) => {
     return {
         "kind": thisType.getKindName(),
@@ -629,11 +704,20 @@ const processNode = (node) => {
     else if (isAnyKeyword(node)) {
         return processAnyKeyword(node);
     }
+    else if (isArrayBindingPattern(node)) {
+        return processArrayBindingPattern(node);
+    }
     else if (isArrayType(node)) {
         return processArrayType(node);
     }
     else if (isBooleanKeyword(node)) {
         return processBooleanKeyword(node);
+    }
+    else if (isBigIntKeyword(node)) {
+        return processBigIntKeyword(node);
+    }
+    else if (isBindingElement(node)) {
+        return processBindingElement(node);
     }
     else if (isCallSignature(node)) {
         return processCallSignature(node);
@@ -719,6 +803,9 @@ const processNode = (node) => {
     else if (isIntersectionType(node)) {
         return processIntersectionType(node);
     }
+    else if (isIntrinsicKeyword(node)) {
+        return processIntrinsicKeyword(node);
+    }
     else if (isLiteralType(node)) {
         return processLiteralType(node);
     }
@@ -730,6 +817,9 @@ const processNode = (node) => {
     }
     else if (isMethodSignature(node)) {
         return processMethodSignature(node);
+    }
+    else if (isMinusToken(node)) {
+        return processMinusToken(node);
     }
     else if (isModifier(node)) {
         return processModifier(node);
@@ -806,6 +896,21 @@ const processNode = (node) => {
     else if (isSymbolKeyword(node)) {
         return processSymbolKeyword(node);
     }
+    else if (isTemplateHead(node)) {
+        return processTemplateHead(node);
+    }
+    else if (isTemplateLiteralType(node)) {
+        return processTemplateLiteralType(node);
+    }
+    else if (isTemplateLiteralTypeSpan(node)) {
+        return processTemplateLiteralTypeSpan(node);
+    }
+    else if (isTemplateMiddle(node)) {
+        return processTemplateMiddle(node);
+    }
+    else if (isTemplateTail(node)) {
+        return processTemplateTail(node);
+    }
     else if (isThisType(node)) {
         return processThisType(node);
     }
@@ -861,14 +966,17 @@ const processNode = (node) => {
         console.log("WARNING: unsupported syntax kind: " + node.getKindName() + " (" + node.getSourceFile().getBaseName() + ")");
     }
 };
-function parse(directory) {
+function parseFromNpm(directory) {
     const project = new ts_morph_1.Project({
         compilerOptions: {
             target: ts_morph_1.ScriptTarget.ESNext,
         },
         skipAddingFilesFromTsConfig: true
     });
-    project.addSourceFilesAtPaths(directory + "/**/*.d.ts");
+    const packageJson = JSON.parse((0, fs_1.readFileSync)(directory + "/package.json").toString());
+    const typesFile = packageJson.types;
+    //project.addSourceFilesAtPaths(directory + "/**/*.d.ts");
+    project.addSourceFilesAtPaths(directory + "/" + typesFile);
     const sourceFiles = [];
     project.getSourceFiles().forEach((sourceFile) => {
         const processedSourceFile = processSourceFile(sourceFile);
@@ -882,6 +990,44 @@ function parse(directory) {
     return {
         "name": "",
         "version": "",
+        "sourceFiles": sourceFiles
+    };
+}
+async function httpDownload(directory, root, tag) {
+    const filename = directory + root + ".d.ts";
+    const response = await fetch("https://raw.githubusercontent.com/microsoft/TypeScript/" + tag + "/src/lib/" + root + ".d.ts");
+    const content = await response.text();
+    (0, fs_1.writeFileSync)(directory + root + ".d.ts", content);
+    const matches = content.matchAll(/\/\/\/ <reference lib="(.*)" \/>/g);
+    for (const match of matches) {
+        await httpDownload(directory, match[1], tag);
+    }
+}
+async function parseFromTypescript(directory, root, tag) {
+    if (!(0, fs_1.existsSync)(directory)) {
+        (0, fs_1.mkdirSync)(directory);
+    }
+    await httpDownload(directory, root, tag);
+    const project = new ts_morph_1.Project({
+        compilerOptions: {
+            target: ts_morph_1.ScriptTarget.ESNext,
+        },
+        skipAddingFilesFromTsConfig: true
+    });
+    project.addSourceFilesAtPaths(directory + "**/*.d.ts");
+    const sourceFiles = [];
+    project.getSourceFiles().forEach((sourceFile) => {
+        const processedSourceFile = processSourceFile(sourceFile);
+        sourceFiles.push({
+            "kind": processedSourceFile.kind,
+            "path": sourceFile.getFilePath().substring(sourceFile.getFilePath().indexOf(directory) + directory.length, sourceFile.getFilePath().length - sourceFile.getBaseName().length),
+            "baseName": processedSourceFile.baseName,
+            "statements": processedSourceFile.statements
+        });
+    });
+    return {
+        "name": root,
+        "version": tag,
         "sourceFiles": sourceFiles
     };
 }
