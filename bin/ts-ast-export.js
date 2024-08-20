@@ -38,12 +38,13 @@ async function run() {
         }
     }
     else if (commandOptions.command == "ts") {
+        (0, fs_1.rmSync)("typescript_lib", { recursive: true, force: true });
         const tsOptions = commandLineArgs(tsDefinitions, { argv });
         const argRoot = tsOptions.root;
-        const argTag = tsOptions.tag;
+        const argTag = tsOptions.tag ?? "main";
         const argKeepSources = tsOptions.keepSources;
-        let ast = await (0, ts_ast_parser_1.parseFromTypescript)("typescript_lib/", argRoot, argTag ?? "main");
-        var fileName = (argRoot + ".json").replaceAll("/", "_");
+        let ast = await (0, ts_ast_parser_1.parseFromTypescript)("typescript_lib/", argRoot, argTag);
+        var fileName = (argRoot + "@" + argTag + ".json").replaceAll("/", "_");
         (0, fs_1.writeFileSync)(fileName, JSON.stringify(ast, null, 2));
         if (argKeepSources == false) {
             (0, fs_1.rmSync)("typescript_lib", { recursive: true, force: true });

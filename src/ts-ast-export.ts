@@ -45,15 +45,17 @@ async function run() {
             rmSync("plugin_packages", { recursive: true, force: true });
         }
     } else if(commandOptions.command == "ts") {
+        rmSync("typescript_lib", { recursive: true, force: true });
+        
         const tsOptions = commandLineArgs(tsDefinitions, { argv });
 
         const argRoot = tsOptions.root;
-        const argTag = tsOptions.tag;
+        const argTag = tsOptions.tag ?? "main";
         const argKeepSources = tsOptions.keepSources;
 
-        let ast = await parseFromTypescript("typescript_lib/", argRoot, argTag ?? "main");
+        let ast = await parseFromTypescript("typescript_lib/", argRoot, argTag);
     
-        var fileName = (argRoot + ".json").replaceAll("/", "_");
+        var fileName = (argRoot + "@" + argTag + ".json").replaceAll("/", "_");
         writeFileSync(fileName, JSON.stringify(ast, null, 2));
     
         if(argKeepSources == false) {
