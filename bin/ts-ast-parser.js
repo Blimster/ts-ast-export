@@ -450,6 +450,7 @@ const processParameter = (parameter) => {
     return {
         "kind": parameter.getKindName(),
         "modifiers": parameter.getModifiers().map(processNode).filter((node) => node != null),
+        "dotDotDotToken": parameter.getDotDotDotToken() != undefined,
         "name": processNode(parameter.getNameNode()),
         "questionToken": processNode(parameter.getQuestionTokenNode()),
         "type": processNode(parameter.getTypeNode()),
