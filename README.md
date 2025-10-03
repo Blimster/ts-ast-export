@@ -16,7 +16,7 @@ from the command line. `<PACKAGE_VERSION>` is optional. As a result, a JSON file
 
 Run 
 
-`npx ts-ast-export ts <ROOT> -v <TAG>`
+`npx ts-ast-export ts <ROOT> -t <TAG>`
 
 from the command line. `<TAG>` is optional. As a result, a JSON file with the AST of all `*.d.ts` files of the lib is written to the current folder. By adding the `-k` options, the downloaded lib source will not be deleted after the JSON was generated.
 
