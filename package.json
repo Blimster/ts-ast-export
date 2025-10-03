@@ -23,9 +23,9 @@
   "homepage": "https://github.com/Blimster/ts-ast-export#readme",
   "dependencies": {
     "command-line-args": "^6.0.0",
-    "live-plugin-manager": "^1.0.0",
-    "node-fetch": "3.3.2",
-    "ts-morph": "^23.0.0",
-    "typescript": "^5.5.3"
+    "live-plugin-manager": "^1.1.0",
+    "node-fetch": "^3.3.0",
+    "ts-morph": "^27.0.0",
+    "typescript": "^5.9.0"
   }
 }
