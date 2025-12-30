@@ -56,6 +56,7 @@ const isNullKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.NullKe
 const isNumberKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.NumberKeyword;
 const isNumericLiteral = (node) => node.getKind() == typescript_1.SyntaxKind.NumericLiteral;
 const isObjectKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.ObjectKeyword;
+const isOptionalType = (node) => node.getKind() == typescript_1.SyntaxKind.OptionalType;
 const isParameter = (node) => node.getKind() == typescript_1.SyntaxKind.Parameter;
 const isParenthesizedType = (node) => node.getKind() == typescript_1.SyntaxKind.ParenthesizedType;
 const isPrefixUnaryExpression = (node) => node.getKind() == typescript_1.SyntaxKind.PrefixUnaryExpression;
@@ -199,6 +200,13 @@ const processEnumMember = (enumMember) => {
         "kind": enumMember.getKindName(),
         "name": processNode(enumMember.getNameNode()),
         "initializer": processNode(enumMember.getInitializer()),
+    };
+};
+const processExportDeclaration = (exportDeclaration) => {
+    return {
+        "kind": exportDeclaration.getKindName(),
+        "namespaceExport": processNode(exportDeclaration.getNamespaceExport()),
+        "moduleSpecifier": processNode(exportDeclaration.getModuleSpecifierSourceFile()),
     };
 };
 const processExpressionWithTypeArguments = (expressionWithTypeArguments) => {
@@ -444,6 +452,12 @@ const processNumericLiteral = (numericLiteral) => {
 const processObjectKeyword = (objectKeyword) => {
     return {
         "kind": objectKeyword.getKindName(),
+    };
+};
+const processOptionalType = (optionalType) => {
+    return {
+        "kind": optionalType.getKindName(),
+        "type": processNode(optionalType.getTypeNode()),
     };
 };
 const processParameter = (parameter) => {
@@ -748,7 +762,7 @@ const processNode = (node) => {
         return processEnumMember(node);
     }
     else if (isExportDeclaration(node)) {
-        return null;
+        return processExportDeclaration(node);
     }
     else if (isExpressionWithTypeArguments(node)) {
         return processExpressionWithTypeArguments(node);
@@ -854,6 +868,9 @@ const processNode = (node) => {
     }
     else if (isObjectKeyword(node)) {
         return processObjectKeyword(node);
+    }
+    else if (isOptionalType(node)) {
+        return processOptionalType(node);
     }
     else if (isParameter(node)) {
         return processParameter(node);

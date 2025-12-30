@@ -42,7 +42,3 @@ The JSON file looks like this:
     }]
 }
 ```
-
-## Status
-
-Currently, it successfully creates a JSON file for the `babylonjs/core@7.14.0` package.

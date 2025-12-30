@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { ArrayBindingPattern, ArrayTypeNode, BindingElement, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportClause, ImportDeclaration, ImportSpecifier, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, NamedImports, NamespaceExport, NamespaceImport, Node, NumericLiteral, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, TemplateHead, TemplateLiteralTypeNode, TemplateMiddle, TemplateTail, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
+import { ArrayBindingPattern, ArrayTypeNode, BindingElement, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportClause, ImportDeclaration, ImportSpecifier, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, NamedImports, NamespaceExport, NamespaceImport, Node, NumericLiteral, OptionalTypeNode, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, TemplateHead, TemplateLiteralTypeNode, TemplateMiddle, TemplateTail, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
 import { SyntaxKind, TemplateLiteralTypeSpan } from "typescript";
 
 const isAnyKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.AnyKeyword;
@@ -53,6 +53,7 @@ const isNullKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.Null
 const isNumberKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.NumberKeyword;
 const isNumericLiteral = (node: Node): node is NumericLiteral => node.getKind() == SyntaxKind.NumericLiteral;
 const isObjectKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.ObjectKeyword;
+const isOptionalType = (node: Node): node is OptionalTypeNode => node.getKind() == SyntaxKind.OptionalType;
 const isParameter = (node: Node): node is ParameterDeclaration => node.getKind() == SyntaxKind.Parameter;
 const isParenthesizedType = (node: Node): node is ParenthesizedTypeNode => node.getKind() == SyntaxKind.ParenthesizedType;
 const isPrefixUnaryExpression = (node: Node): node is PrefixUnaryExpression => node.getKind() == SyntaxKind.PrefixUnaryExpression;
@@ -215,6 +216,14 @@ const processEnumMember = (enumMember: EnumMember): any => {
         "initializer": processNode(enumMember.getInitializer()),
     };
 };
+
+const processExportDeclaration = (exportDeclaration: ExportDeclaration): any => {
+    return {
+        "kind": exportDeclaration.getKindName(),
+        "namespaceExport": processNode(exportDeclaration.getNamespaceExport()),
+        "moduleSpecifier": processNode(exportDeclaration.getModuleSpecifierSourceFile()),
+    };
+}
 
 const processExpressionWithTypeArguments = (expressionWithTypeArguments: ExpressionWithTypeArguments): any => {
     return {
@@ -494,6 +503,13 @@ const processObjectKeyword = (objectKeyword: Node): any => {
         "kind": objectKeyword.getKindName(),
     };
 };
+
+const processOptionalType = (optionalType: OptionalTypeNode): any => {
+    return {
+        "kind": optionalType.getKindName(),
+        "type": processNode(optionalType.getTypeNode()),
+    };
+}
 
 const processParameter = (parameter: ParameterDeclaration): any => {
     return {
@@ -818,7 +834,7 @@ const processNode = (node?: Node): any => {
     } else if (isEnumMember(node)) {
         return processEnumMember(node);
     } else if (isExportDeclaration(node)) {
-        return null;
+        return processExportDeclaration(node);
     } else if (isExpressionWithTypeArguments(node)) {
         return processExpressionWithTypeArguments(node);
     } else if (isFalseKeyword(node)) {
@@ -889,7 +905,9 @@ const processNode = (node?: Node): any => {
         return processNumericLiteral(node);
     } else if (isObjectKeyword(node)) {
         return processObjectKeyword(node);
-    } else if (isParameter(node)) {
+    } else if (isOptionalType(node)) {
+        return processOptionalType(node);
+    }else if (isParameter(node)) {
         return processParameter(node);
     } else if (isParenthesizedType(node)) {
         return processParenthesizedType(node);
