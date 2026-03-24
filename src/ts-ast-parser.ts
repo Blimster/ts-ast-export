@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { ArrayBindingPattern, ArrayTypeNode, BindingElement, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportClause, ImportDeclaration, ImportSpecifier, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, NamedImports, NamespaceExport, NamespaceImport, Node, NumericLiteral, OptionalTypeNode, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, TemplateHead, TemplateLiteralTypeNode, TemplateMiddle, TemplateTail, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
+import { ArrayBindingPattern, ArrayTypeNode, BindingElement, CallSignatureDeclaration, ClassDeclaration, ComputedPropertyName, ConditionalTypeNode, ConstructorDeclaration, ConstructorTypeNode, ConstructSignatureDeclaration, createWrappedNode, EnumDeclaration, EnumMember, ExportDeclaration, ExpressionWithTypeArguments, FunctionDeclaration, FunctionTypeNode, GetAccessorDeclaration, HeritageClause, Identifier, ImportAttribute, ImportAttributes, ImportClause, ImportDeclaration, ImportSpecifier, ImportTypeNode, IndexedAccessTypeNode, IndexSignatureDeclaration, InferTypeNode, InterfaceDeclaration, IntersectionTypeNode, LiteralTypeNode, MappedTypeNode, MethodDeclaration, MethodSignature, ModuleBlock, ModuleDeclaration, NamedImports, NamedTupleMember, NamespaceExport, NamespaceImport, Node, NumericLiteral, OptionalTypeNode, ParameterDeclaration, ParenthesizedTypeNode, PrefixUnaryExpression, Project, PropertyAccessExpression, PropertyDeclaration, PropertySignature, QualifiedName, RestTypeNode, ScriptTarget, SetAccessorDeclaration, SourceFile, TemplateHead, TemplateLiteralTypeNode, TemplateMiddle, TemplateTail, ThisTypeNode, TupleTypeNode, TypeAliasDeclaration, TypeLiteralNode, TypeOperatorTypeNode, TypeParameterDeclaration, TypePredicateNode, TypeQueryNode, TypeReferenceNode, UnionTypeNode, VariableDeclaration, VariableDeclarationList, VariableStatement } from "ts-morph";
 import { SyntaxKind, TemplateLiteralTypeSpan } from "typescript";
 
 const isAnyKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.AnyKeyword;
@@ -46,6 +46,7 @@ const isModifier = (node: Node): boolean => [SyntaxKind.AbstractKeyword, SyntaxK
 const isModuleBlock = (node: Node): node is ModuleBlock => node.getKind() == SyntaxKind.ModuleBlock;
 const isModuleDeclaration = (node: Node): node is ModuleDeclaration => node.getKind() == SyntaxKind.ModuleDeclaration;
 const isNamedImports = (node: Node): node is NamedImports => node.getKind() == SyntaxKind.NamedImports;
+const isNamedTupleMember = (node: Node): node is NamedTupleMember => node.getKind() == SyntaxKind.NamedTupleMember;
 const isNamespaceExport = (node: Node): node is NamespaceExport => node.getKind() == SyntaxKind.NamespaceExportDeclaration;
 const isNamespaceImport = (node: Node): node is NamespaceImport => node.getKind() == SyntaxKind.NamespaceImport;
 const isNeverKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.NeverKeyword;
@@ -54,6 +55,7 @@ const isNumberKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.Nu
 const isNumericLiteral = (node: Node): node is NumericLiteral => node.getKind() == SyntaxKind.NumericLiteral;
 const isObjectKeyword = (node: Node): boolean => node.getKind() == SyntaxKind.ObjectKeyword;
 const isOptionalType = (node: Node): node is OptionalTypeNode => node.getKind() == SyntaxKind.OptionalType;
+const isOverrideKeywork = (node: Node): boolean => node.getKind() == SyntaxKind.OverrideKeyword;
 const isParameter = (node: Node): node is ParameterDeclaration => node.getKind() == SyntaxKind.Parameter;
 const isParenthesizedType = (node: Node): node is ParenthesizedTypeNode => node.getKind() == SyntaxKind.ParenthesizedType;
 const isPrefixUnaryExpression = (node: Node): node is PrefixUnaryExpression => node.getKind() == SyntaxKind.PrefixUnaryExpression;
@@ -455,6 +457,7 @@ const processModuleDeclaration = (moduleDeclaration: ModuleDeclaration): any => 
         "kind": moduleDeclaration.getKindName(),
         "modifiers": moduleDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(moduleDeclaration.getNameNode()),
+        "declarationKind": moduleDeclaration.getDeclarationKind(),
         "body": processNode(moduleDeclaration.getBody()),
     };
 };
@@ -463,6 +466,14 @@ const processNamedImports = (namedImports: NamedImports): any => {
     return {
         "kind": namedImports.getKindName(),
         "elements": namedImports.getElements().map(processNode).filter((node) => node != null),
+    };
+};
+
+const processNamedTupleMember = (namedTupleMember: NamedTupleMember): any => {
+    return {
+        "kind": namedTupleMember.getKindName(),
+        "name": processNode(namedTupleMember.getNameNode()),
+        "type": processNode(namedTupleMember.getTypeNode()),
     };
 };
 
@@ -508,6 +519,12 @@ const processOptionalType = (optionalType: OptionalTypeNode): any => {
     return {
         "kind": optionalType.getKindName(),
         "type": processNode(optionalType.getTypeNode()),
+    };
+}
+
+const processOverrideKeyword = (overrideKeywork: Node): any => {
+    return {
+        "kind": overrideKeywork.getKindName(),
     };
 }
 
@@ -891,6 +908,8 @@ const processNode = (node?: Node): any => {
         return processModuleDeclaration(node);
     } else if (isNamedImports(node)) {
         return processNamedImports(node);
+    } else if (isNamedTupleMember(node)) {
+        return processNamedTupleMember(node);
     } else if (isNamespaceImport(node)) {
         return processNamespaceImport(node);
     } else if (isNamespaceExport(node)) {
@@ -907,7 +926,9 @@ const processNode = (node?: Node): any => {
         return processObjectKeyword(node);
     } else if (isOptionalType(node)) {
         return processOptionalType(node);
-    }else if (isParameter(node)) {
+    } else if (isOverrideKeywork(node)) {
+        return processOverrideKeyword(node);
+    } else if (isParameter(node)) {
         return processParameter(node);
     } else if (isParenthesizedType(node)) {
         return processParenthesizedType(node);

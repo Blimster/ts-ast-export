@@ -49,6 +49,7 @@ const isModifier = (node) => [typescript_1.SyntaxKind.AbstractKeyword, typescrip
 const isModuleBlock = (node) => node.getKind() == typescript_1.SyntaxKind.ModuleBlock;
 const isModuleDeclaration = (node) => node.getKind() == typescript_1.SyntaxKind.ModuleDeclaration;
 const isNamedImports = (node) => node.getKind() == typescript_1.SyntaxKind.NamedImports;
+const isNamedTupleMember = (node) => node.getKind() == typescript_1.SyntaxKind.NamedTupleMember;
 const isNamespaceExport = (node) => node.getKind() == typescript_1.SyntaxKind.NamespaceExportDeclaration;
 const isNamespaceImport = (node) => node.getKind() == typescript_1.SyntaxKind.NamespaceImport;
 const isNeverKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.NeverKeyword;
@@ -57,6 +58,7 @@ const isNumberKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.Numb
 const isNumericLiteral = (node) => node.getKind() == typescript_1.SyntaxKind.NumericLiteral;
 const isObjectKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.ObjectKeyword;
 const isOptionalType = (node) => node.getKind() == typescript_1.SyntaxKind.OptionalType;
+const isOverrideKeywork = (node) => node.getKind() == typescript_1.SyntaxKind.OverrideKeyword;
 const isParameter = (node) => node.getKind() == typescript_1.SyntaxKind.Parameter;
 const isParenthesizedType = (node) => node.getKind() == typescript_1.SyntaxKind.ParenthesizedType;
 const isPrefixUnaryExpression = (node) => node.getKind() == typescript_1.SyntaxKind.PrefixUnaryExpression;
@@ -413,6 +415,7 @@ const processModuleDeclaration = (moduleDeclaration) => {
         "kind": moduleDeclaration.getKindName(),
         "modifiers": moduleDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(moduleDeclaration.getNameNode()),
+        "declarationKind": moduleDeclaration.getDeclarationKind(),
         "body": processNode(moduleDeclaration.getBody()),
     };
 };
@@ -420,6 +423,13 @@ const processNamedImports = (namedImports) => {
     return {
         "kind": namedImports.getKindName(),
         "elements": namedImports.getElements().map(processNode).filter((node) => node != null),
+    };
+};
+const processNamedTupleMember = (namedTupleMember) => {
+    return {
+        "kind": namedTupleMember.getKindName(),
+        "name": processNode(namedTupleMember.getNameNode()),
+        "type": processNode(namedTupleMember.getTypeNode()),
     };
 };
 const processNamespaceImport = (namespaceImport) => {
@@ -458,6 +468,11 @@ const processOptionalType = (optionalType) => {
     return {
         "kind": optionalType.getKindName(),
         "type": processNode(optionalType.getTypeNode()),
+    };
+};
+const processOverrideKeyword = (overrideKeywork) => {
+    return {
+        "kind": overrideKeywork.getKindName(),
     };
 };
 const processParameter = (parameter) => {
@@ -848,6 +863,9 @@ const processNode = (node) => {
     else if (isNamedImports(node)) {
         return processNamedImports(node);
     }
+    else if (isNamedTupleMember(node)) {
+        return processNamedTupleMember(node);
+    }
     else if (isNamespaceImport(node)) {
         return processNamespaceImport(node);
     }
@@ -871,6 +889,9 @@ const processNode = (node) => {
     }
     else if (isOptionalType(node)) {
         return processOptionalType(node);
+    }
+    else if (isOverrideKeywork(node)) {
+        return processOverrideKeyword(node);
     }
     else if (isParameter(node)) {
         return processParameter(node);

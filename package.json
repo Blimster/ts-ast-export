@@ -26,6 +26,6 @@
     "live-plugin-manager": "^1.1.0",
     "node-fetch": "^3.3.0",
     "ts-morph": "^27.0.0",
-    "typescript": "^5.9.0"
+    "typescript": "^6.0.0"
   }
 }
