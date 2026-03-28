@@ -42,3 +42,9 @@ The JSON file looks like this:
     }]
 }
 ```
+
+## Development
+
+Run `npx tsc -w` to compile Typescript to Javascript on the fly.
+
+[TypeScript AST Viewer](https://ts-ast-viewer.com/) as a helper to understand how some Typescript code is represented as an AST.

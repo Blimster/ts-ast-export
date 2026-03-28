@@ -5,6 +5,28 @@ exports.parseFromTypescript = parseFromTypescript;
 const fs_1 = require("fs");
 const ts_morph_1 = require("ts-morph");
 const typescript_1 = require("typescript");
+const getFlagNames = (flags, enumObject, excludeMask = 0) => {
+    const filteredFlags = flags & ~excludeMask;
+    if (filteredFlags == 0) {
+        const zeroName = enumObject[0];
+        return typeof zeroName == "string" && zeroName != "None" ? [zeroName] : [];
+    }
+    const names = [];
+    for (const [name, value] of Object.entries(enumObject)) {
+        if (typeof value != "number") {
+            continue;
+        }
+        if (value <= 0 || !Number.isInteger(Math.log2(value))) {
+            continue;
+        }
+        if ((filteredFlags & value) == value) {
+            if (name != "None") {
+                names.push(name);
+            }
+        }
+    }
+    return names;
+};
 const isAnyKeyword = (node) => node.getKind() == typescript_1.SyntaxKind.AnyKeyword;
 const isArrayBindingPattern = (node) => node.getKind() == typescript_1.SyntaxKind.ArrayBindingPattern;
 const isArrayType = (node) => node.getKind() == typescript_1.SyntaxKind.ArrayType;
@@ -98,33 +120,39 @@ const isVoidKeyworkd = (node) => node.getKind() == typescript_1.SyntaxKind.VoidK
 const processAnyKeyword = (anyKeyword) => {
     return {
         "kind": anyKeyword.getKindName(),
+        "flags": getFlagNames(anyKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processArrayBindingPattern = (arrayBindingPattern) => {
     return {
         "kind": arrayBindingPattern.getKindName(),
+        "flags": getFlagNames(arrayBindingPattern.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "elements": arrayBindingPattern.getElements().map(processNode).filter((node) => node != null),
     };
 };
 const processArrayType = (arrayType) => {
     return {
         "kind": arrayType.getKindName(),
+        "flags": getFlagNames(arrayType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "elementType": processNode(arrayType.getElementTypeNode()),
     };
 };
 const processBooleanKeyword = (booleanKeyword) => {
     return {
         "kind": booleanKeyword.getKindName(),
+        "flags": getFlagNames(booleanKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processBigIntKeyword = (bigIntKeyword) => {
     return {
         "kind": bigIntKeyword.getKindName(),
+        "flags": getFlagNames(bigIntKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processBindingElement = (bindingElement) => {
     return {
         "kind": bindingElement.getKindName(),
+        "flags": getFlagNames(bindingElement.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "dotDotDotToken": processNode(bindingElement.getDotDotDotToken()),
         "propertyName": processNode(bindingElement.getPropertyNameNode()),
         "name": processNode(bindingElement.getNameNode()),
@@ -134,6 +162,7 @@ const processBindingElement = (bindingElement) => {
 const processCallSignature = (callSignature) => {
     return {
         "kind": callSignature.getKindName(),
+        "flags": getFlagNames(callSignature.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "typeParameters": callSignature.getTypeParameters().map(processNode).filter((node) => node != null),
         "parameters": callSignature.getParameters().map(processNode).filter((node) => node != null),
         "type": processNode(callSignature.getReturnTypeNode()),
@@ -142,6 +171,7 @@ const processCallSignature = (callSignature) => {
 const processClassDeclaration = (classDeclaration) => {
     return {
         "kind": classDeclaration.getKindName(),
+        "flags": getFlagNames(classDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": classDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(classDeclaration.getNameNode()),
         "typeParameters": classDeclaration.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -152,12 +182,14 @@ const processClassDeclaration = (classDeclaration) => {
 const processComputedPropertyName = (computedPropertyName) => {
     return {
         "kind": computedPropertyName.getKindName(),
+        "flags": getFlagNames(computedPropertyName.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "expression": processNode(computedPropertyName.getExpression()),
     };
 };
 const processConditionalType = (conditionalType) => {
     return {
         "kind": conditionalType.getKindName(),
+        "flags": getFlagNames(conditionalType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "checkType": processNode(conditionalType.getCheckType()),
         "extendsType": processNode(conditionalType.getExtendsType()),
         "trueType": processNode(conditionalType.getTrueType()),
@@ -167,6 +199,7 @@ const processConditionalType = (conditionalType) => {
 const processConstructorDeclaration = (constructor) => {
     return {
         "kind": constructor.getKindName(),
+        "flags": getFlagNames(constructor.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "typeParameters": constructor.getTypeParameters().map(processNode).filter((node) => node != null),
         "parameters": constructor.getParameters().map(processNode).filter((node) => node != null),
         "type": processNode(constructor.getReturnTypeNode()),
@@ -175,6 +208,7 @@ const processConstructorDeclaration = (constructor) => {
 const processConstructorType = (constructorType) => {
     return {
         "kind": constructorType.getKindName(),
+        "flags": getFlagNames(constructorType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": constructorType.getModifiers().map(processNode).filter((node) => node != null),
         "typeParameters": constructorType.compilerNode.typeParameters?.map((n) => processNode((0, ts_morph_1.createWrappedNode)(n))).filter((node) => node != null),
         "parameters": constructorType.getParameters().map(processNode).filter((node) => node != null),
@@ -184,6 +218,7 @@ const processConstructorType = (constructorType) => {
 const processConstructSignature = (constructSignature) => {
     return {
         "kind": constructSignature.getKindName(),
+        "flags": getFlagNames(constructSignature.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "typeParameters": constructSignature.getTypeParameters().map(processNode).filter((node) => node != null),
         "parameters": constructSignature.getParameters().map(processNode).filter((node) => node != null),
         "type": processNode(constructSignature.getReturnTypeNode()),
@@ -192,6 +227,7 @@ const processConstructSignature = (constructSignature) => {
 const processEnumDeclaration = (enumDeclaration) => {
     return {
         "kind": enumDeclaration.getKindName(),
+        "flags": getFlagNames(enumDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": enumDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(enumDeclaration.getNameNode()),
         "members": enumDeclaration.getMembers().map(processNode).filter((node) => node != null),
@@ -200,6 +236,7 @@ const processEnumDeclaration = (enumDeclaration) => {
 const processEnumMember = (enumMember) => {
     return {
         "kind": enumMember.getKindName(),
+        "flags": getFlagNames(enumMember.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "name": processNode(enumMember.getNameNode()),
         "initializer": processNode(enumMember.getInitializer()),
     };
@@ -207,6 +244,7 @@ const processEnumMember = (enumMember) => {
 const processExportDeclaration = (exportDeclaration) => {
     return {
         "kind": exportDeclaration.getKindName(),
+        "flags": getFlagNames(exportDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "namespaceExport": processNode(exportDeclaration.getNamespaceExport()),
         "moduleSpecifier": processNode(exportDeclaration.getModuleSpecifierSourceFile()),
     };
@@ -214,6 +252,7 @@ const processExportDeclaration = (exportDeclaration) => {
 const processExpressionWithTypeArguments = (expressionWithTypeArguments) => {
     return {
         "kind": expressionWithTypeArguments.getKindName(),
+        "flags": getFlagNames(expressionWithTypeArguments.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "expression": processNode(expressionWithTypeArguments.getExpression()),
         "typeArguments": expressionWithTypeArguments.getTypeArguments().map(processNode).filter((node) => node != null),
     };
@@ -221,11 +260,13 @@ const processExpressionWithTypeArguments = (expressionWithTypeArguments) => {
 const processFalseKeyword = (falseKeyword) => {
     return {
         "kind": falseKeyword.getKindName(),
+        "flags": getFlagNames(falseKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processFunctionDeclaration = (functionDeclaration) => {
     return {
         "kind": functionDeclaration.getKindName(),
+        "flags": getFlagNames(functionDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": functionDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "asteriskToken": processNode(functionDeclaration.getAsteriskToken()),
         "name": processNode(functionDeclaration.getNameNode()),
@@ -237,6 +278,7 @@ const processFunctionDeclaration = (functionDeclaration) => {
 const processFunctionType = (functionType) => {
     return {
         "kind": functionType.getKindName(),
+        "flags": getFlagNames(functionType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "typeParameters": functionType.getTypeParameters().map(processNode).filter((node) => node != null),
         "parameters": functionType.getParameters().map(processNode).filter((node) => node != null),
         "type": processNode(functionType.getReturnTypeNode()),
@@ -245,6 +287,7 @@ const processFunctionType = (functionType) => {
 const processGetAccessor = (getAccessor) => {
     return {
         "kind": getAccessor.getKindName(),
+        "flags": getFlagNames(getAccessor.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": getAccessor.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(getAccessor.getNameNode()),
         "typeParameters": getAccessor.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -254,6 +297,7 @@ const processGetAccessor = (getAccessor) => {
 const processHeritageClause = (heritageClause) => {
     return {
         "kind": heritageClause.getKindName(),
+        "flags": getFlagNames(heritageClause.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "token": {
             "kind": heritageClause.getToken() == typescript_1.SyntaxKind.ExtendsKeyword ? "ExtendsKeyword" : "ImplementsKeyword",
         },
@@ -263,12 +307,14 @@ const processHeritageClause = (heritageClause) => {
 const processIdentifier = (identifier) => {
     return {
         "kind": identifier.getKindName(),
+        "flags": getFlagNames(identifier.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "text": identifier.getText(),
     };
 };
 const processImportAttribute = (importAttribute) => {
     return {
         "kind": importAttribute.getKindName(),
+        "flags": getFlagNames(importAttribute.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "name": processNode(importAttribute.getNameNode()),
         "value": processNode(importAttribute.getValue()),
     };
@@ -276,12 +322,14 @@ const processImportAttribute = (importAttribute) => {
 const processImportAttributes = (importAttributes) => {
     return {
         "kind": importAttributes.getKindName(),
+        "flags": getFlagNames(importAttributes.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "elements": importAttributes.getElements().map(processNode).filter((node) => node != null),
     };
 };
 const processImportClause = (importClause) => {
     return {
         "kind": importClause.getKindName(),
+        "flags": getFlagNames(importClause.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "isTypeOnly": importClause.compilerNode.isTypeOnly,
         "name": importClause.compilerNode.name ? processNode((0, ts_morph_1.createWrappedNode)(importClause.compilerNode.name)) : undefined,
         "namedBindings": processNode(importClause.getNamedBindings()),
@@ -290,6 +338,7 @@ const processImportClause = (importClause) => {
 const processImportDeclaration = (importDeclaration) => {
     return {
         "kind": importDeclaration.getKindName(),
+        "flags": getFlagNames(importDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": importDeclaration.compilerNode.modifiers?.map((n) => processNode((0, ts_morph_1.createWrappedNode)(n))).filter((node) => node != null),
         "importClause": processNode(importDeclaration.getImportClause()),
         "moduleSpecifier": processNode(importDeclaration.getModuleSpecifier()),
@@ -299,6 +348,7 @@ const processImportDeclaration = (importDeclaration) => {
 const processImportSpecifier = (importSpecifier) => {
     return {
         "kind": importSpecifier.getKindName(),
+        "flags": getFlagNames(importSpecifier.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "isTypeOnly": importSpecifier.compilerNode.isTypeOnly,
         "name": processNode(importSpecifier.getNameNode()),
         "propertyName": importSpecifier.compilerNode.propertyName ? processNode((0, ts_morph_1.createWrappedNode)(importSpecifier.compilerNode.propertyName)) : undefined,
@@ -307,6 +357,7 @@ const processImportSpecifier = (importSpecifier) => {
 const processImportType = (importType) => {
     return {
         "kind": importType.getKindName(),
+        "flags": getFlagNames(importType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "argument": processNode(importType.getArgument()),
         "attributes": processNode(importType.getAttributes()),
         "qualifier": processNode(importType.getQualifier()),
@@ -316,6 +367,7 @@ const processImportType = (importType) => {
 const processIndexedAccessType = (indexedAccessType) => {
     return {
         "kind": indexedAccessType.getKindName(),
+        "flags": getFlagNames(indexedAccessType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "objectType": processNode(indexedAccessType.getObjectTypeNode()),
         "indexType": processNode(indexedAccessType.getIndexTypeNode()),
     };
@@ -323,6 +375,7 @@ const processIndexedAccessType = (indexedAccessType) => {
 const processIndexSignature = (indexSignature) => {
     return {
         "kind": indexSignature.getKindName(),
+        "flags": getFlagNames(indexSignature.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": indexSignature.getModifiers().map(processNode).filter((node) => node != null),
         "parameters": indexSignature.compilerNode.parameters.map((p) => processNode((0, ts_morph_1.createWrappedNode)(p))).filter((node) => node != null),
         "type": processNode(indexSignature.getReturnTypeNode()),
@@ -331,12 +384,14 @@ const processIndexSignature = (indexSignature) => {
 const processInferType = (inferType) => {
     return {
         "kind": inferType.getKindName(),
+        "flags": getFlagNames(inferType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "typeParameter": processNode(inferType.getTypeParameter()),
     };
 };
 const processInterfaceDeclaration = (interfaceDeclaration) => {
     return {
         "kind": interfaceDeclaration.getKindName(),
+        "flags": getFlagNames(interfaceDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": interfaceDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(interfaceDeclaration.getNameNode()),
         "typeParameters": interfaceDeclaration.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -347,23 +402,27 @@ const processInterfaceDeclaration = (interfaceDeclaration) => {
 const processIntersectionType = (intersectionType) => {
     return {
         "kind": intersectionType.getKindName(),
+        "flags": getFlagNames(intersectionType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "types": intersectionType.getTypeNodes().map(processNode).filter((node) => node != null),
     };
 };
 const processIntrinsicKeyword = (intrinsicKeyword) => {
     return {
         "kind": intrinsicKeyword.getKindName(),
+        "flags": getFlagNames(intrinsicKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processLiteralType = (literalType) => {
     return {
         "kind": literalType.getKindName(),
+        "flags": getFlagNames(literalType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "literal": processNode(literalType.getLiteral()),
     };
 };
 const processMappedType = (mappedType) => {
     return {
         "kind": mappedType.getKindName(),
+        "flags": getFlagNames(mappedType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "readonlyToken": processNode(mappedType.getReadonlyToken()),
         "typeParameter": processNode(mappedType.getTypeParameter()),
         "nameType": processNode(mappedType.getNameTypeNode()),
@@ -375,6 +434,7 @@ const processMappedType = (mappedType) => {
 const processMethodDeclaration = (methodDeclaration) => {
     return {
         "kind": methodDeclaration.getKindName(),
+        "flags": getFlagNames(methodDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": methodDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(methodDeclaration.getNameNode()),
         "asteriskToken": processNode(methodDeclaration.getAsteriskToken()),
@@ -387,6 +447,7 @@ const processMethodDeclaration = (methodDeclaration) => {
 const processMethodSignature = (methodSignature) => {
     return {
         "kind": methodSignature.getKindName(),
+        "flags": getFlagNames(methodSignature.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "name": processNode(methodSignature.getNameNode()),
         "questionToken": processNode(methodSignature.getQuestionTokenNode()),
         "typeParameters": methodSignature.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -397,22 +458,26 @@ const processMethodSignature = (methodSignature) => {
 const processMinusToken = (minusToken) => {
     return {
         "kind": minusToken.getKindName(),
+        "flags": getFlagNames(minusToken.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processModifier = (modifier) => {
     return {
         "kind": modifier.getKindName(),
+        "flags": getFlagNames(modifier.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processModuleBlock = (moduleBlock) => {
     return {
         "kind": moduleBlock.getKindName(),
+        "flags": getFlagNames(moduleBlock.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "statements": moduleBlock.getStatements().map(processNode).filter((node) => node != null),
     };
 };
 const processModuleDeclaration = (moduleDeclaration) => {
     return {
         "kind": moduleDeclaration.getKindName(),
+        "flags": getFlagNames(moduleDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": moduleDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(moduleDeclaration.getNameNode()),
         "declarationKind": moduleDeclaration.getDeclarationKind(),
@@ -422,12 +487,14 @@ const processModuleDeclaration = (moduleDeclaration) => {
 const processNamedImports = (namedImports) => {
     return {
         "kind": namedImports.getKindName(),
+        "flags": getFlagNames(namedImports.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "elements": namedImports.getElements().map(processNode).filter((node) => node != null),
     };
 };
 const processNamedTupleMember = (namedTupleMember) => {
     return {
         "kind": namedTupleMember.getKindName(),
+        "flags": getFlagNames(namedTupleMember.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "name": processNode(namedTupleMember.getNameNode()),
         "type": processNode(namedTupleMember.getTypeNode()),
     };
@@ -435,49 +502,58 @@ const processNamedTupleMember = (namedTupleMember) => {
 const processNamespaceImport = (namespaceImport) => {
     return {
         "kind": namespaceImport.getKindName(),
+        "flags": getFlagNames(namespaceImport.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "name": processNode(namespaceImport.getNameNode()),
     };
 };
 const processNeverKeyword = (neverKeyword) => {
     return {
         "kind": neverKeyword.getKindName(),
+        "flags": getFlagNames(neverKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processNullKeyword = (nullKeyword) => {
     return {
         "kind": nullKeyword.getKindName(),
+        "flags": getFlagNames(nullKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processNumberKeyword = (numberKeyword) => {
     return {
         "kind": numberKeyword.getKindName(),
+        "flags": getFlagNames(numberKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processNumericLiteral = (numericLiteral) => {
     return {
         "kind": numericLiteral.getKindName(),
+        "flags": getFlagNames(numericLiteral.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "text": numericLiteral.getText(),
     };
 };
 const processObjectKeyword = (objectKeyword) => {
     return {
         "kind": objectKeyword.getKindName(),
+        "flags": getFlagNames(objectKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processOptionalType = (optionalType) => {
     return {
         "kind": optionalType.getKindName(),
+        "flags": getFlagNames(optionalType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "type": processNode(optionalType.getTypeNode()),
     };
 };
 const processOverrideKeyword = (overrideKeywork) => {
     return {
         "kind": overrideKeywork.getKindName(),
+        "flags": getFlagNames(overrideKeywork.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processParameter = (parameter) => {
     return {
         "kind": parameter.getKindName(),
+        "flags": getFlagNames(parameter.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": parameter.getModifiers().map(processNode).filter((node) => node != null),
         "dotDotDotToken": parameter.getDotDotDotToken() != undefined,
         "name": processNode(parameter.getNameNode()),
@@ -489,12 +565,14 @@ const processParameter = (parameter) => {
 const processParenthesizedType = (parenthesizedType) => {
     return {
         "kind": parenthesizedType.getKindName(),
+        "flags": getFlagNames(parenthesizedType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "type": processNode(parenthesizedType.getTypeNode()),
     };
 };
 const processPrefixUnaryExpression = (prefixUnaryExpression) => {
     return {
         "kind": prefixUnaryExpression.getKindName(),
+        "flags": getFlagNames(prefixUnaryExpression.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "operator": {
             "kind": typescript_1.SyntaxKind[prefixUnaryExpression.getOperatorToken().toString()]
         },
@@ -504,6 +582,7 @@ const processPrefixUnaryExpression = (prefixUnaryExpression) => {
 const processPropertyAccessExpression = (propertyAccessExpression) => {
     return {
         "kind": propertyAccessExpression.getKindName(),
+        "flags": getFlagNames(propertyAccessExpression.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "expression": processNode(propertyAccessExpression.getExpression()),
         "questionDotToken": processNode(propertyAccessExpression.getQuestionDotTokenNode()),
         "name": processNode(propertyAccessExpression.getNameNode()),
@@ -512,6 +591,7 @@ const processPropertyAccessExpression = (propertyAccessExpression) => {
 const processPropertyDeclaration = (propertyDeclaration) => {
     return {
         "kind": propertyDeclaration.getKindName(),
+        "flags": getFlagNames(propertyDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": propertyDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(propertyDeclaration.getNameNode()),
         "questionToken": processNode(propertyDeclaration.getQuestionTokenNode()),
@@ -523,6 +603,7 @@ const processPropertyDeclaration = (propertyDeclaration) => {
 const processPropertySignature = (propertySignature) => {
     return {
         "kind": propertySignature.getKindName(),
+        "flags": getFlagNames(propertySignature.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": propertySignature.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(propertySignature.getNameNode()),
         "questionToken": processNode(propertySignature.getQuestionTokenNode()),
@@ -533,6 +614,7 @@ const processPropertySignature = (propertySignature) => {
 const processQualifiedName = (qualifiedName) => {
     return {
         "kind": qualifiedName.getKindName(),
+        "flags": getFlagNames(qualifiedName.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "left": processNode(qualifiedName.getLeft()),
         "right": processNode(qualifiedName.getRight()),
     };
@@ -540,17 +622,20 @@ const processQualifiedName = (qualifiedName) => {
 const processQuestionToken = (questionToken) => {
     return {
         "kind": questionToken.getKindName(),
+        "flags": getFlagNames(questionToken.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processRestType = (restType) => {
     return {
         "kind": restType.getKindName(),
+        "flags": getFlagNames(restType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "type": processNode(restType.getTypeNode()),
     };
 };
 const processSetAccessor = (setAccessor) => {
     return {
         "kind": setAccessor.getKindName(),
+        "flags": getFlagNames(setAccessor.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": setAccessor.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(setAccessor.getNameNode()),
         "typeParameters": setAccessor.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -560,6 +645,7 @@ const processSetAccessor = (setAccessor) => {
 const processSourceFile = (sourceFile) => {
     return {
         "kind": sourceFile.getKindName(),
+        "flags": getFlagNames(sourceFile.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "baseName": sourceFile.getBaseName(),
         "statements": sourceFile.getStatements().map(processNode).filter((node) => node != null)
     };
@@ -567,28 +653,33 @@ const processSourceFile = (sourceFile) => {
 const processStringKeyword = (stringKeyword) => {
     return {
         "kind": stringKeyword.getKindName(),
+        "flags": getFlagNames(stringKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processStringLiteral = (stringLiteral) => {
     return {
         "kind": stringLiteral.getKindName(),
+        "flags": getFlagNames(stringLiteral.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "text": stringLiteral.getText(),
     };
 };
 const processSymbolKeyword = (symbolKeyword) => {
     return {
         "kind": symbolKeyword.getKindName(),
+        "flags": getFlagNames(symbolKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processTemplateHead = (templateHead) => {
     return {
         "kind": templateHead.getKindName(),
+        "flags": getFlagNames(templateHead.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "text": templateHead.getText(),
     };
 };
 const processTemplateLiteralType = (templateLiteralType) => {
     return {
         "kind": templateLiteralType.getKindName(),
+        "flags": getFlagNames(templateLiteralType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "head": processNode(templateLiteralType.getHead()),
         "templateSpans": templateLiteralType.getTemplateSpans().map(processNode).filter((node) => node != null),
     };
@@ -597,6 +688,7 @@ const processTemplateLiteralTypeSpan = (templateLiteralTypeSpan) => {
     const compilerNode = templateLiteralTypeSpan.compilerNode;
     return {
         "kind": templateLiteralTypeSpan.getKindName(),
+        "flags": getFlagNames(templateLiteralTypeSpan.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "type": processNode((0, ts_morph_1.createWrappedNode)(compilerNode.type)),
         "literal": processNode((0, ts_morph_1.createWrappedNode)(compilerNode.literal)),
     };
@@ -604,34 +696,40 @@ const processTemplateLiteralTypeSpan = (templateLiteralTypeSpan) => {
 const processTemplateMiddle = (templateTail) => {
     return {
         "kind": templateTail.getKindName(),
+        "flags": getFlagNames(templateTail.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "text": templateTail.getText(),
     };
 };
 const processTemplateTail = (templateTail) => {
     return {
         "kind": templateTail.getKindName(),
+        "flags": getFlagNames(templateTail.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "text": templateTail.getText(),
     };
 };
 const processThisType = (thisType) => {
     return {
         "kind": thisType.getKindName(),
+        "flags": getFlagNames(thisType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processTrueKeyword = (trueKeyword) => {
     return {
         "kind": trueKeyword.getKindName(),
+        "flags": getFlagNames(trueKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processTupleType = (tupleType) => {
     return {
         "kind": tupleType.getKindName(),
+        "flags": getFlagNames(tupleType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "elements": tupleType.getElements().map(processNode).filter((node) => node != null),
     };
 };
 const processTypeAliasDeclaration = (typeAliasDeclaration) => {
     return {
         "kind": typeAliasDeclaration.getKindName(),
+        "flags": getFlagNames(typeAliasDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": typeAliasDeclaration.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(typeAliasDeclaration.getNameNode()),
         "typeParameters": typeAliasDeclaration.getTypeParameters().map(processNode).filter((node) => node != null),
@@ -641,12 +739,14 @@ const processTypeAliasDeclaration = (typeAliasDeclaration) => {
 const processTypeLiteral = (typeLiteral) => {
     return {
         "kind": typeLiteral.getKindName(),
+        "flags": getFlagNames(typeLiteral.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "members": typeLiteral.getMembers().map(processNode).filter((node) => node != null),
     };
 };
 const processTypeOperator = (typeOperator) => {
     return {
         "kind": typeOperator.getKindName(),
+        "flags": getFlagNames(typeOperator.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "operator": {
             "kind": typescript_1.SyntaxKind[typeOperator.getOperator().toString()]
         },
@@ -656,6 +756,7 @@ const processTypeOperator = (typeOperator) => {
 const processTypeParameter = (typeParameter) => {
     return {
         "kind": typeParameter.getKindName(),
+        "flags": getFlagNames(typeParameter.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": typeParameter.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(typeParameter.getNameNode()),
         "constraint": processNode(typeParameter.getConstraint()),
@@ -665,6 +766,7 @@ const processTypeParameter = (typeParameter) => {
 const processTypePredicate = (typePredicate) => {
     return {
         "kind": typePredicate.getKindName(),
+        "flags": getFlagNames(typePredicate.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "assertsModifier": processNode(typePredicate.getAssertsModifier()),
         "parameterName": processNode(typePredicate.getParameterNameNode()),
         "type": processNode(typePredicate.getTypeNode()),
@@ -673,6 +775,7 @@ const processTypePredicate = (typePredicate) => {
 const processTypeQuery = (typeQuery) => {
     return {
         "kind": typeQuery.getKindName(),
+        "flags": getFlagNames(typeQuery.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "exprName": processNode(typeQuery.getExprName()),
         "typeArguments": typeQuery.getTypeArguments().map(processNode).filter((node) => node != null),
     };
@@ -680,6 +783,7 @@ const processTypeQuery = (typeQuery) => {
 const processTypeReference = (typeReference) => {
     return {
         "kind": typeReference.getKindName(),
+        "flags": getFlagNames(typeReference.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "typeName": processNode(typeReference.getTypeName()),
         "typeArguments": typeReference.getTypeArguments().map(processNode).filter((node) => node != null),
     };
@@ -687,22 +791,26 @@ const processTypeReference = (typeReference) => {
 const processUndefinedKeyword = (undefinedKeyword) => {
     return {
         "kind": undefinedKeyword.getKindName(),
+        "flags": getFlagNames(undefinedKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processUnionType = (unionType) => {
     return {
         "kind": unionType.getKindName(),
+        "flags": getFlagNames(unionType.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "types": unionType.getTypeNodes().map(processNode).filter((node) => node != null),
     };
 };
 const processUnknownKeyword = (unknownKeyword) => {
     return {
         "kind": unknownKeyword.getKindName(),
+        "flags": getFlagNames(unknownKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processVariableDeclaration = (variableDeclaration) => {
     return {
         "kind": variableDeclaration.getKindName(),
+        "flags": getFlagNames(variableDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "name": processNode(variableDeclaration.getNameNode()),
         "exclamationToken": processNode(variableDeclaration.getExclamationTokenNode()),
         "type": processNode(variableDeclaration.getTypeNode()),
@@ -712,12 +820,14 @@ const processVariableDeclaration = (variableDeclaration) => {
 const processVariableDeclarationList = (variableDeclarationList) => {
     return {
         "kind": variableDeclarationList.getKindName(),
+        "flags": getFlagNames(variableDeclarationList.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "declarations": variableDeclarationList.getDeclarations().map(processNode).filter((node) => node != null),
     };
 };
 const processVariableStatement = (variableStatement) => {
     return {
         "kind": variableStatement.getKindName(),
+        "flags": getFlagNames(variableStatement.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
         "modifiers": variableStatement.getModifiers().map(processNode).filter((node) => node != null),
         "declarationList": processNode(variableStatement.getDeclarationList()),
     };
@@ -725,6 +835,7 @@ const processVariableStatement = (variableStatement) => {
 const processVoidKeyword = (voidKeyword) => {
     return {
         "kind": voidKeyword.getKindName(),
+        "flags": getFlagNames(voidKeyword.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
     };
 };
 const processNode = (node) => {
