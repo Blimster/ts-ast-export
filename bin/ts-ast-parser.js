@@ -245,6 +245,7 @@ const processExportDeclaration = (exportDeclaration) => {
     return {
         "kind": exportDeclaration.getKindName(),
         "flags": getFlagNames(exportDeclaration.getFlags(), typescript_1.NodeFlags, typescript_1.NodeFlags.ContextFlags),
+        "isTypeOnly": exportDeclaration.compilerNode.isTypeOnly,
         "namespaceExport": processNode(exportDeclaration.getNamespaceExport()),
         "moduleSpecifier": processNode(exportDeclaration.getModuleSpecifierSourceFile()),
     };
@@ -639,7 +640,7 @@ const processSetAccessor = (setAccessor) => {
         "modifiers": setAccessor.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(setAccessor.getNameNode()),
         "typeParameters": setAccessor.getTypeParameters().map(processNode).filter((node) => node != null),
-        "type": processNode(setAccessor.getReturnTypeNode()),
+        "parameters": setAccessor.getParameters().map(processNode).filter((node) => node != null),
     };
 };
 const processSourceFile = (sourceFile) => {

@@ -267,6 +267,7 @@ const processExportDeclaration = (exportDeclaration: ExportDeclaration): any => 
     return {
         "kind": exportDeclaration.getKindName(),
         "flags": getFlagNames(exportDeclaration.getFlags(), NodeFlags, NodeFlags.ContextFlags),
+        "isTypeOnly": exportDeclaration.compilerNode.isTypeOnly,
         "namespaceExport": processNode(exportDeclaration.getNamespaceExport()),
         "moduleSpecifier": processNode(exportDeclaration.getModuleSpecifierSourceFile()),
     };
@@ -708,7 +709,7 @@ const processSetAccessor = (setAccessor: SetAccessorDeclaration): any => {
         "modifiers": setAccessor.getModifiers().map(processNode).filter((node) => node != null),
         "name": processNode(setAccessor.getNameNode()),
         "typeParameters": setAccessor.getTypeParameters().map(processNode).filter((node) => node != null),
-        "type": processNode(setAccessor.getReturnTypeNode()),
+        "parameters": setAccessor.getParameters().map(processNode).filter((node) => node != null),
     };
 };
 
